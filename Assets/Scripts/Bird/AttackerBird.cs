@@ -10,15 +10,15 @@ public class AttackerBird : MonoBehaviour
 
     private void OnEnable()
     {
-        _inputDetector.Fired += Shoot;
+        _inputDetector.Fired += SpawnBullet;
     }
 
     private void OnDisable()
     {
-        _inputDetector.Fired -= Shoot;
+        _inputDetector.Fired -= SpawnBullet;
     }
 
-    private void Shoot()
+    private void SpawnBullet()
     {
         Vector3 correctivePosition = new Vector3(_offsetX, _offsetY, 0);
         _spawnerBulletBird.Spawn(transform.position + correctivePosition, transform.right);

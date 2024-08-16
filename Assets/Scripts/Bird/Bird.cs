@@ -1,20 +1,13 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(BirdCollisionHandler), typeof(MoverBird))]
-public class Bird : MonoBehaviour, IRemoveble
+public class Bird : MonoBehaviour, IRemovable
 {
     private BirdCollisionHandler _handler;
     private MoverBird _moverBird;
 
     public event Action GameOver;
-
-    public void Reset()
-    {
-        _moverBird.Reset();
-    }
 
     private void Awake()
     {
@@ -32,21 +25,16 @@ public class Bird : MonoBehaviour, IRemoveble
         _handler.CollisionDetected -= ProcessCollision;
     }
 
-    private void ProcessCollision(IRemoveble interactable)
-    {
-        if (interactable is Enemy || interactable is Ground || interactable is BulletEnemy)
-        {
-            Destroy();
-        }
-    }
-
-    public void Destroy()
+    public void Remove()
     {
         GameOver?.Invoke();
     }
 
-    public void Remove()
+    private void ProcessCollision(IRemovable interactable)
     {
-        Destroy();
+        if (interactable is Enemy || interactable is Ground || interactable is BulletEnemy)
+        {
+            Remove();
+        }
     }
 }

@@ -1,21 +1,14 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 public abstract class Bullet : MonoBehaviour
 {
     private LayerMask _targetMask;
-    private WaitForSecondsRealtime _wait;
     private Vector2 _direction;
-    private float _flightTime = 4f;
     private float _speed;
 
     public event Action<Bullet> Fired;
-
-    private void Awake()
-    {
-        _wait = new WaitForSecondsRealtime(_flightTime);
-    }
+    public event Action Fitted;
 
     private void Update()
     {
@@ -26,18 +19,14 @@ public abstract class Bullet : MonoBehaviour
     {
         if ((_targetMask.value & 1 << collider.gameObject.layer) != 0)
         {
-            if (collider.TryGetComponent(out IRemoveble removeble))
+            if (collider.TryGetComponent(out IRemovable removable))
             {
-                removeble.Remove();
+                removable.Remove();
+                Fitted?.Invoke();
             }
 
-            Destroy();
+            Remove();
         }
-    }
-
-    private void OnEnable()
-    {
-        StartCoroutine(SelfDestruct());
     }
 
     public void SetLayerMaskTarget(LayerMask layerMask)
@@ -54,15 +43,8 @@ public abstract class Bullet : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
     }
 
-    public void Destroy()
+    public void Remove()
     {
         Fired?.Invoke(this);
-    }
-
-    private IEnumerator SelfDestruct()
-    {
-        yield return _wait;
-
-        Destroy();
     }
 }

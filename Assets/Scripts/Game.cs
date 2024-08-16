@@ -1,56 +1,64 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
     [SerializeField] private Bird _bird;
     [SerializeField] private SpawnerEnemies _spawnerEnemies;
+    [SerializeField] private SpawnerBulletEnemy _spawnerBulletEnemy;
+    [SerializeField] private InputDetector _inputDetector;
     [SerializeField] private StartScreen _startScreen;
-    [SerializeField] private ExitScreen _exitScreen;
-    [SerializeField] private ScoreCounter _scoreCounter;
+    [SerializeField] private RestartScreen _exitScreen;
 
     private void Awake()
     {
+        StopActive();
+        _exitScreen.Close();
         _startScreen.Open();
     }
 
     private void OnEnable()
     {
+        _bird.GameOver += StopGame;
         _startScreen.PlayButtonClicked += OnPlayButtonClick;
-        _exitScreen.RestartButtonClicked += OnExitButtonClick;
+        _exitScreen.RestartButtonClicked += OnRestartButtonClick;
     }
 
     private void OnDisable()
     {
+        _bird.GameOver -= StopGame;
         _startScreen.PlayButtonClicked -= OnPlayButtonClick;
-        _exitScreen.RestartButtonClicked -= OnExitButtonClick;
+        _exitScreen.RestartButtonClicked -= OnRestartButtonClick;
     }
 
     private void OnPlayButtonClick()
     {
-        _startScreen.Close();
         StartGame();
     }
 
-    private void OnExitButtonClick()
+    private void OnRestartButtonClick()
     {
-        _exitScreen.Close();
-        StopGame();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     private void StopGame()
     {
-        Time.timeScale = 0f;
         _exitScreen.Open();
+        StopActive();
     }
 
     private void StartGame()
     {
-        _spawnerEnemies.Reset();
-        Time.timeScale = 1.0f;
-        _spawnerEnemies.StartSpawnEnemy();
-        _scoreCounter.Reset();
-        _bird.Reset();
+        _startScreen.Close();
+        _inputDetector.gameObject.SetActive(true);
+        _spawnerBulletEnemy.gameObject.SetActive(true);
+        _spawnerEnemies.gameObject.SetActive(true);
+    }
+
+    private void StopActive()
+    {
+        _inputDetector.gameObject.SetActive(false);
+        _spawnerBulletEnemy.gameObject.SetActive(false);
+        _spawnerEnemies.gameObject.SetActive(false);
     }
 }

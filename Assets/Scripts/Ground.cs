@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Ground : MonoBehaviour, IRemoveble
+public class Ground : MonoBehaviour, IRemovable
 {
     public void Remove() { }
 }

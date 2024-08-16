@@ -1,112 +1,65 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Pool;
-using UnityEngine.tvOS;
 
-public class SpawnerEnemies : MonoBehaviour
+public class SpawnerEnemies : SpawnerObjects<Enemy>
 {
-    [SerializeField] private Enemy _enemyPrefab;
     [SerializeField] private SpawnerBulletEnemy _spawnerBulletEnemy;
 
-    private ObjectPool<Enemy> _pool;
-    private List<Enemy> _enemyList;
-    private WaitForSecondsRealtime _wait;
-    private Coroutine _coroutine;
-
-    private float _minSpawnPositionY = -2.5f;
-    private float _maxSpawnPositionY = 2.5f;
-    private float _minRandomTime = 1f;
-    private float _maxRandomTime = 2.5f;
+    private float _minSpawnPositionY = -3.85f;
+    private float _maxSpawnPositionY = 3.85f;
+    private float _minRandomTime = 0.7f;
+    private float _maxRandomTime = 2.2f;
     private float _randomTimeGeneration;
 
-    public event Action Removed;
-
-    private void Awake()
-    {
-        _enemyList = new List<Enemy>();
-        _coroutine = StartCoroutine(GenerateEnemy());
-        _randomTimeGeneration = UnityEngine.Random.Range(_minRandomTime, _maxRandomTime + 1);
-        _wait = new WaitForSecondsRealtime(_randomTimeGeneration);
-        _pool = new ObjectPool<Enemy>(CreateObject, OnGet, OnRelease, Destroy, true);
-    }
-
-    public void StartSpawnEnemy()
+    public void OnEnable()
     {
         StartCoroutine(GenerateEnemy());
     }
 
-    public void Reset()
+    protected override Enemy CreateObject()
     {
-        if(_coroutine != null)
-        {
-            StopCoroutine(_coroutine);
-        }
+        Enemy enemy = Instantiate(prefab);
 
-        foreach (Enemy enemy in _enemyList)
-        {
-            ReleaseToPool(enemy);
-        }
+        return enemy;
+    }
 
-        _enemyList.Clear();
+    protected override void OnGet(Enemy enemy)
+    {
+        enemy.Spawned += RemoveObject;
+        base.OnGet(enemy);
+    }
+
+    protected override void OnRelease(Enemy enemy)
+    {
+        enemy.Spawned -= RemoveObject;
+        base.OnRelease(enemy);
+    }
+
+    protected override void Destroy(Enemy enemy)
+    {
+        enemy.Spawned -= RemoveObject;
+        base.Destroy(enemy);
     }
 
     private Enemy Spawn()
     {
-        float spawnPositionY = UnityEngine.Random.Range(_minSpawnPositionY, _maxSpawnPositionY + 1);
+        float spawnPositionY = Random.Range(_minSpawnPositionY, _maxSpawnPositionY);
         Vector3 spawnPoint = new Vector3(transform.position.x, spawnPositionY, transform.position.z);
 
-        Enemy enemy = _pool.Get();
-        enemy.Construct(_spawnerBulletEnemy);
+        Enemy enemy = pool.Get();
+        enemy.InitializationSpawnerBullet(_spawnerBulletEnemy);
         enemy.transform.position = spawnPoint;
-        _enemyList.Add(enemy);
 
         return enemy;
-    }
-
-    private void ReleaseToPool(Enemy enemy)
-    {
-        _pool.Release(enemy);
-    }
-
-    private void RemoveObject(Enemy enemy)
-    {
-        ReleaseToPool(enemy);
-    }
-
-    private Enemy CreateObject()
-    {
-        Enemy enemy = Instantiate(_enemyPrefab);
-        enemy.Spawned += RemoveObject;
-
-        return enemy;
-    }
-
-    private void OnGet(Enemy enemy)
-    {
-        enemy.gameObject.SetActive(true);
-    }
-
-    private void OnRelease(Enemy enemy)
-    {
-        enemy.gameObject.SetActive(false);
-        Removed?.Invoke();
-    }
-
-    private void Destroy(Enemy enemy)
-    {       
-        enemy.Spawned -= RemoveObject;
-        Destroy(enemy.gameObject);
     }
 
     private IEnumerator GenerateEnemy()
     {
         while (enabled)
         {
-            _randomTimeGeneration = UnityEngine.Random.Range(_minRandomTime, _maxRandomTime + 1);
+            _randomTimeGeneration = Random.Range(_minRandomTime, _maxRandomTime);
 
-            yield return _wait;
+            yield return new WaitForSecondsRealtime(_randomTimeGeneration);
 
             Spawn();
         }
