@@ -24,9 +24,7 @@ public abstract class SpawnerObjects<T> : MonoBehaviour where T : MonoBehaviour
 
     protected virtual T CreateObject()
     {
-        T bullet = Instantiate(prefab);
-
-        return bullet;
+        return Instantiate(prefab);
     }
 
     protected virtual void OnGet(T bullet)
